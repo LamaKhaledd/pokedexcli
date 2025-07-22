@@ -9,16 +9,23 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
 
-var commands = map[string]cliCommand{}
+type config struct {
+	nextLocationURL     *string
+	previousLocationURL *string
+}
 
-func init() {
+func main() {
+	cfg := &config{}
+
+	commands := make(map[string]cliCommand)
+
 	commands["exit"] = cliCommand{
 		name:        "exit",
 		description: "Exit the Pokedex",
-		callback:    commandExit,
+		callback:    commandExit(),
 	}
 
 	commands["help"] = cliCommand{
@@ -26,10 +33,19 @@ func init() {
 		description: "Displays a help message",
 		callback:    commandHelp(commands),
 	}
-}
 
+	commands["map"] = cliCommand{
+		name:        "map",
+		description: "View next 20 location areas",
+		callback:    commandMap,
+	}
 
-func main() {
+	commands["mapb"] = cliCommand{
+		name:        "mapb",
+		description: "View previous 20 location areas",
+		callback:    commandMapBack,
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -55,7 +71,7 @@ func main() {
 			continue
 		}
 
-		err := cmd.callback()
+		err := cmd.callback(cfg)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
