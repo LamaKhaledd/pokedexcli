@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	"github.com/LamaKhaledd/pokedexcli/internal/pokeapi"
 )
 
@@ -18,7 +17,7 @@ func cleanInput(text string) []string {
 func commandHelp(cmds map[string]cliCommand) func(*config) error {
 	return func(cfg *config) error {
 		fmt.Println("Welcome to the Pokedex!")
-		fmt.Println("Usage:\n")
+		fmt.Println("Usage:")
 		for _, cmd := range cmds {
 			fmt.Printf("%s: %s\n", cmd.name, cmd.description)
 		}

@@ -4,6 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/LamaKhaledd/pokedexcli/internal/pokeapi"
+	"github.com/LamaKhaledd/pokedexcli/internal/pokecache"
 )
 
 type cliCommand struct {
@@ -18,6 +22,8 @@ type config struct {
 }
 
 func main() {
+	pokeapi.Cache = pokecache.NewCache(5 * time.Minute)
+
 	cfg := &config{}
 
 	commands := make(map[string]cliCommand)
