@@ -13,7 +13,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, []string) error
 }
 
 type config struct {
@@ -52,6 +52,12 @@ func main() {
 		callback:    commandMapBack,
 	}
 
+	commands["explore"] = cliCommand{
+		name:        "explore",
+		description: "Explore a location area and see Pokémon there",
+		callback:    commandExplore,
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -77,7 +83,9 @@ func main() {
 			continue
 		}
 
-		err := cmd.callback(cfg)
+		args := words[1:]
+
+		err := cmd.callback(cfg, args)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}

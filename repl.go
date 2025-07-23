@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
 	"github.com/LamaKhaledd/pokedexcli/internal/pokeapi"
 )
 
@@ -14,8 +15,8 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandHelp(cmds map[string]cliCommand) func(*config) error {
-	return func(cfg *config) error {
+func commandHelp(cmds map[string]cliCommand) func(*config, []string) error {
+	return func(cfg *config, args []string) error {
 		fmt.Println("Welcome to the Pokedex!")
 		fmt.Println("Usage:")
 		for _, cmd := range cmds {
@@ -26,15 +27,15 @@ func commandHelp(cmds map[string]cliCommand) func(*config) error {
 	}
 }
 
-func commandExit() func(*config) error {
-	return func(cfg *config) error {
+func commandExit() func(*config, []string) error {
+	return func(cfg *config, args []string) error {
 		fmt.Println("Closing the Pokedex... Goodbye!")
 		os.Exit(0)
 		return nil
 	}
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, args []string) error {
 	url := ""
 	if cfg.nextLocationURL != nil {
 		url = *cfg.nextLocationURL
@@ -55,7 +56,7 @@ func commandMap(cfg *config) error {
 	return nil
 }
 
-func commandMapBack(cfg *config) error {
+func commandMapBack(cfg *config, args []string) error {
 	if cfg.previousLocationURL == nil {
 		fmt.Println("You're on the first page")
 		return nil
@@ -72,6 +73,34 @@ func commandMapBack(cfg *config) error {
 
 	cfg.nextLocationURL = next
 	cfg.previousLocationURL = prev
+
+	return nil
+}
+
+func commandExplore(cfg *config, args []string) error {
+	if len(args) == 0 {
+		fmt.Println("Usage: explore <location_area_name>")
+		return nil
+	}
+
+	areaName := args[0]
+
+	fmt.Printf("Exploring %s...\n", areaName)
+
+	pokemonNames, err := pokeapi.GetPokemonInLocationArea(areaName)
+	if err != nil {
+		return err
+	}
+
+	if len(pokemonNames) == 0 {
+		fmt.Println("No Pokémon found in this location area.")
+		return nil
+	}
+
+	fmt.Println("Found Pokemon:")
+	for _, name := range pokemonNames {
+		fmt.Printf(" - %s\n", name)
+	}
 
 	return nil
 }
