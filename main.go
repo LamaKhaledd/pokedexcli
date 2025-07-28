@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"time"
-
+	"github.com/chzyer/readline"
 	"github.com/LamaKhaledd/pokedexcli/internal/pokeapi"
 	"github.com/LamaKhaledd/pokedexcli/internal/pokecache"
 )
@@ -70,19 +69,21 @@ func main() {
 	}
 
 
-	scanner := bufio.NewScanner(os.Stdin)
+	rl, err := readline.New("Pokedex > ")
+	if err != nil {
+		fmt.Println("Failed to start input reader:", err)
+		os.Exit(1)
+	}
+	defer rl.Close()
 
 	for {
-		fmt.Print("Pokedex > ")
-
-		if !scanner.Scan() {
+		line, err := rl.Readline()
+		if err != nil {
 			fmt.Println("\nExiting Pokedex.")
 			break
 		}
 
-		input := scanner.Text()
-		words := cleanInput(input)
-
+		words := cleanInput(line)
 		if len(words) == 0 {
 			continue
 		}
@@ -96,8 +97,7 @@ func main() {
 		}
 
 		args := words[1:]
-
-		err := cmd.callback(cfg, args)
+		err = cmd.callback(cfg, args)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
