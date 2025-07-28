@@ -19,12 +19,17 @@ type cliCommand struct {
 type config struct {
 	nextLocationURL     *string
 	previousLocationURL *string
+	caughtPokemon       map[string]pokeapi.Pokemon
 }
+
 
 func main() {
 	pokeapi.Cache = pokecache.NewCache(5 * time.Minute)
 
-	cfg := &config{}
+	cfg := &config{
+	caughtPokemon: make(map[string]pokeapi.Pokemon),
+	}
+
 
 	commands := make(map[string]cliCommand)
 
@@ -57,6 +62,13 @@ func main() {
 		description: "Explore a location area and see Pokémon there",
 		callback:    commandExplore,
 	}
+
+	commands["catch"] = cliCommand{
+	name:        "catch",
+	description: "Try to catch a Pokemon by name",
+	callback:    commandCatch,
+	}
+
 
 	scanner := bufio.NewScanner(os.Stdin)
 

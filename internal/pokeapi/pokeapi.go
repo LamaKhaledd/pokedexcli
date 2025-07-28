@@ -20,6 +20,12 @@ type LocationAreasResponse struct {
 	Previous *string        `json:"previous"`
 }
 
+
+type Pokemon struct {
+	Name           string `json:"name"`
+	BaseExperience int    `json:"base_experience"`
+}
+
 var Cache *pokecache.Cache
 
 func GetLocationAreas(url string) ([]string, *string, *string, error) {
@@ -27,7 +33,6 @@ func GetLocationAreas(url string) ([]string, *string, *string, error) {
 		url = "https://pokeapi.co/api/v2/location-area?limit=20"
 	}
 
-	// Check cache first
 	if data, found := Cache.Get(url); found {
 		fmt.Println("📦 Loaded from cache:", url)
 		var parsed LocationAreasResponse
@@ -42,7 +47,6 @@ func GetLocationAreas(url string) ([]string, *string, *string, error) {
 		return names, parsed.Next, parsed.Previous, nil
 	}
 
-	// Fetch from network
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, nil, nil, err
@@ -58,7 +62,6 @@ func GetLocationAreas(url string) ([]string, *string, *string, error) {
 		return nil, nil, nil, err
 	}
 
-	// Cache the result
 	Cache.Add(url, body)
 
 	var data LocationAreasResponse
@@ -78,7 +81,6 @@ func GetLocationAreas(url string) ([]string, *string, *string, error) {
 func GetPokemonInLocationArea(name string) ([]string, error) {
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", name)
 
-	// Check cache first
 	if data, found := Cache.Get(url); found {
 		fmt.Println("📦 Loaded from cache:", url)
 		return parsePokemonFromLocationData(data)
@@ -99,7 +101,6 @@ func GetPokemonInLocationArea(name string) ([]string, error) {
 		return nil, err
 	}
 
-	// Cache it
 	Cache.Add(url, body)
 
 	return parsePokemonFromLocationData(body)
@@ -124,4 +125,42 @@ func parsePokemonFromLocationData(data []byte) ([]string, error) {
 	}
 
 	return names, nil
+}
+
+
+func GetPokemon(name string) (Pokemon, error) {
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", name)
+
+	if data, found := Cache.Get(url); found {
+		fmt.Println("📦 Loaded from cache:", url)
+		var p Pokemon
+		if err := json.Unmarshal(data, &p); err != nil {
+			return Pokemon{}, err
+		}
+		return p, nil
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return Pokemon{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return Pokemon{}, fmt.Errorf("failed to fetch Pokemon: %s", name)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	Cache.Add(url, body)
+
+	var p Pokemon
+	if err := json.Unmarshal(body, &p); err != nil {
+		return Pokemon{}, err
+	}
+
+	return p, nil
 }

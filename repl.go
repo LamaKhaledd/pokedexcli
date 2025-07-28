@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"math/rand"
+	"time"
 
 	"github.com/LamaKhaledd/pokedexcli/internal/pokeapi"
 )
@@ -100,6 +102,40 @@ func commandExplore(cfg *config, args []string) error {
 	fmt.Println("Found Pokemon:")
 	for _, name := range pokemonNames {
 		fmt.Printf(" - %s\n", name)
+	}
+
+	return nil
+}
+
+
+
+func commandCatch(cfg *config, args []string) error {
+	if len(args) == 0 {
+		fmt.Println("Usage: catch <pokemon_name>")
+		return nil
+	}
+
+	pokemonName := args[0]
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
+
+	pokemon, err := pokeapi.GetPokemon(pokemonName)
+	if err != nil {
+		return fmt.Errorf("failed to fetch pokemon: %w", err)
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	chance := 100 - pokemon.BaseExperience
+	if chance < 10 {
+		chance = 10
+	}
+
+	roll := rand.Intn(100)
+	if roll < chance {
+		cfg.caughtPokemon[pokemon.Name] = pokemon
+		fmt.Printf("%s was caught!\n", pokemon.Name)
+	} else {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
 	}
 
 	return nil
