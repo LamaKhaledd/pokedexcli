@@ -10,6 +10,19 @@ import (
 	"github.com/LamaKhaledd/pokedexcli/internal/pokeapi"
 )
 
+type Stat struct {
+	BaseStat int `json:"base_stat"`
+	StatInfo struct {
+		Name string `json:"name"`
+	} `json:"stat"`
+}
+
+type Type struct {
+	TypeInfo struct {
+		Name string `json:"name"`
+	} `json:"type"`
+}
+
 func cleanInput(text string) []string {
 	trimmed := strings.TrimSpace(text)
 	lowered := strings.ToLower(trimmed)
@@ -17,24 +30,21 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandHelp(cmds map[string]cliCommand) func(*config, []string) error {
-	return func(cfg *config, args []string) error {
-		fmt.Println("Welcome to the Pokedex!")
-		fmt.Println("Usage:")
-		for _, cmd := range cmds {
-			fmt.Printf("%s: %s\n", cmd.name, cmd.description)
-		}
-		fmt.Println()
-		return nil
-	}
+func commandExit(cfg *config, args []string) error {
+	fmt.Println("Closing the Pokedex... Goodbye!")
+	os.Exit(0)
+	return nil
 }
 
-func commandExit() func(*config, []string) error {
-	return func(cfg *config, args []string) error {
-		fmt.Println("Closing the Pokedex... Goodbye!")
-		os.Exit(0)
-		return nil
+func commandHelp(cfg *config, args []string) error {
+	fmt.Println("Welcome to the Pokedex!")
+	fmt.Println("Usage:")
+
+	for _, cmd := range commandsMap {
+		fmt.Printf("%s: %s\n", cmd.name, cmd.description)
 	}
+	fmt.Println()
+	return nil
 }
 
 func commandMap(cfg *config, args []string) error {
@@ -107,8 +117,6 @@ func commandExplore(cfg *config, args []string) error {
 	return nil
 }
 
-
-
 func commandCatch(cfg *config, args []string) error {
 	if len(args) == 0 {
 		fmt.Println("Usage: catch <pokemon_name>")
@@ -123,14 +131,14 @@ func commandCatch(cfg *config, args []string) error {
 		return fmt.Errorf("failed to fetch pokemon: %w", err)
 	}
 
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	chance := 100 - pokemon.BaseExperience
 	if chance < 10 {
 		chance = 10
 	}
 
-	roll := rand.Intn(100)
+	roll := r.Intn(100)
 	if roll < chance {
 		cfg.caughtPokemon[pokemon.Name] = pokemon
 		fmt.Printf("%s was caught!\n", pokemon.Name)
@@ -138,5 +146,47 @@ func commandCatch(cfg *config, args []string) error {
 		fmt.Printf("%s escaped!\n", pokemon.Name)
 	}
 
+	return nil
+}
+
+func commandInspect(cfg *config, args []string) error {
+	if len(args) == 0 {
+		fmt.Println("Usage: inspect <pokemon_name>")
+		return nil
+	}
+
+	name := args[0]
+
+	p, caught := cfg.caughtPokemon[name]
+	if !caught {
+		fmt.Println("you have not caught that pokemon")
+		return nil
+	}
+
+	fmt.Printf("Name: %s\n", p.Name)
+	fmt.Printf("Height: %d\n", p.Height)
+	fmt.Printf("Weight: %d\n", p.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range p.Stats {
+		fmt.Printf("  -%s: %d\n", stat.StatInfo.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, t := range p.Types {
+		fmt.Printf("  - %s\n", t.TypeInfo.Name)
+	}
+
+	return nil
+}
+
+func commandPokedex(cfg *config, args []string) error {
+	if len(cfg.caughtPokemon) == 0 {
+		fmt.Println("You haven't caught any Pokemon yet.")
+		return nil
+	}
+
+	fmt.Println("Your Pokedex:")
+	for name := range cfg.caughtPokemon {
+		fmt.Printf(" - %s\n", name)
+	}
 	return nil
 }

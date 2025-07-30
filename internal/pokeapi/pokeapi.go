@@ -20,11 +20,28 @@ type LocationAreasResponse struct {
 	Previous *string        `json:"previous"`
 }
 
+type Stat struct {
+    BaseStat int `json:"base_stat"`
+    StatInfo struct {
+        Name string `json:"name"`
+    } `json:"stat"`
+}
+
+type Type struct {
+    TypeInfo struct {
+        Name string `json:"name"`
+    } `json:"type"`
+}
 
 type Pokemon struct {
-	Name           string `json:"name"`
-	BaseExperience int    `json:"base_experience"`
+    Name           string `json:"name"`
+    BaseExperience int    `json:"base_experience"`
+    Height         int    `json:"height"`
+    Weight         int    `json:"weight"`
+    Stats          []Stat `json:"stats"`
+    Types          []Type `json:"types"`
 }
+
 
 var Cache *pokecache.Cache
 

@@ -21,27 +21,27 @@ type config struct {
 	caughtPokemon       map[string]pokeapi.Pokemon
 }
 
+var commandsMap map[string]cliCommand
 
 func main() {
-	pokeapi.Cache = pokecache.NewCache(5 * time.Minute)
+	pokeapi.Cache = pokecache.NewCache(5 * time.Second)
 
 	cfg := &config{
-	caughtPokemon: make(map[string]pokeapi.Pokemon),
+		caughtPokemon: make(map[string]pokeapi.Pokemon),
 	}
-
 
 	commands := make(map[string]cliCommand)
 
 	commands["exit"] = cliCommand{
 		name:        "exit",
 		description: "Exit the Pokedex",
-		callback:    commandExit(),
+		callback:    commandExit,
 	}
 
 	commands["help"] = cliCommand{
 		name:        "help",
 		description: "Displays a help message",
-		callback:    commandHelp(commands),
+		callback:    commandHelp,
 	}
 
 	commands["map"] = cliCommand{
@@ -63,11 +63,24 @@ func main() {
 	}
 
 	commands["catch"] = cliCommand{
-	name:        "catch",
-	description: "Try to catch a Pokemon by name",
-	callback:    commandCatch,
+		name:        "catch",
+		description: "Try to catch a Pokemon by name",
+		callback:    commandCatch,
 	}
 
+	commands["inspect"] = cliCommand{
+		name:        "inspect",
+		description: "Inspect details of a caught Pokemon",
+		callback:    commandInspect,
+	}
+
+	commands["pokedex"] = cliCommand{
+		name:        "pokedex",
+		description: "List all caught Pokemon",
+		callback:    commandPokedex,
+	}
+
+	commandsMap = commands
 
 	rl, err := readline.New("Pokedex > ")
 	if err != nil {
